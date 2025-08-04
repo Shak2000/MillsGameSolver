@@ -1,3 +1,7 @@
+import sys
+import copy
+
+
 class Game:
     visual = [
         "*─────*─────*",
@@ -43,22 +47,22 @@ class Game:
     }
 
     lines = {
-        [(0, 0), (3, 0), (6, 0)],
-        [(1, 1), (3, 1), (5, 1)],
-        [(2, 2), (3, 2), (4, 2)],
-        [(0, 3), (1, 3), (2, 3)],
-        [(4, 3), (5, 3), (6, 3)],
-        [(2, 4), (3, 4), (4, 4)],
-        [(1, 5), (3, 5), (5, 5)],
-        [(0, 6), (3, 6), (6, 6)],
-        [(0, 0), (0, 3), (0, 6)],
-        [(1, 1), (1, 3), (1, 5)],
-        [(2, 2), (2, 3), (2, 4)],
-        [(3, 0), (3, 1), (3, 2)],
-        [(3, 4), (3, 5), (3, 6)],
-        [(4, 2), (4, 3), (4, 4)],
-        [(5, 1), (5, 3), (5, 5)],
-        [(6, 0), (6, 3), (6, 6)]
+        frozenset([(0, 0), (3, 0), (6, 0)]),
+        frozenset([(1, 1), (3, 1), (5, 1)]),
+        frozenset([(2, 2), (3, 2), (4, 2)]),
+        frozenset([(0, 3), (1, 3), (2, 3)]),
+        frozenset([(4, 3), (5, 3), (6, 3)]),
+        frozenset([(2, 4), (3, 4), (4, 4)]),
+        frozenset([(1, 5), (3, 5), (5, 5)]),
+        frozenset([(0, 6), (3, 6), (6, 6)]),
+        frozenset([(0, 0), (0, 3), (0, 6)]),
+        frozenset([(1, 1), (1, 3), (1, 5)]),
+        frozenset([(2, 2), (2, 3), (2, 4)]),
+        frozenset([(3, 0), (3, 1), (3, 2)]),
+        frozenset([(3, 4), (3, 5), (3, 6)]),
+        frozenset([(4, 2), (4, 3), (4, 4)]),
+        frozenset([(5, 1), (5, 3), (5, 5)]),
+        frozenset([(6, 0), (6, 3), (6, 6)])
     }
 
     def __init__(self):
@@ -92,12 +96,13 @@ class Game:
     def place(self, x, y):
         if self.placed < 18 and (x, y) in self.adjacent.keys() and self.board[y][x] == '*':
             self.history.append((
-                [[self.board[i][j] for j in range(7)] for i in range(7)],
+                copy.deepcopy(self.board),
                 self.placed,
                 self.white,
                 self.black,
                 self.white_lost,
-                self.black_lost
+                self.black_lost,
+                self.player
             ))
             self.board[y][x] = self.player
             self.placed += 1
@@ -117,16 +122,19 @@ class Game:
             return False
         if (nx, ny) not in self.adjacent.keys():
             return False
-        if self.get_piece_count(self.player) > 3 and (nx, ny) not in self.adjacent[(x, y)]:
+        if self.get_piece_count(self.player) > 3 and (nx, ny) not in self.adjacent.get((x, y), []):
             return False
+
         self.history.append((
-            [[self.board[i][j] for j in range(7)] for i in range(7)],
+            copy.deepcopy(self.board),
             self.placed,
             self.white,
             self.black,
             self.white_lost,
-            self.black_lost
+            self.black_lost,
+            self.player
         ))
+
         self.board[y][x] = '*'
         self.board[ny][nx] = self.player
         return True
@@ -156,13 +164,16 @@ class Game:
             for x in range(7):
                 if self.board[y][x] == opponent:
                     pieces.append((x, y))
+
         all_in_mills = True
         for x, y in pieces:
             if not self.check_mill(x, y, opponent):
                 all_in_mills = False
                 break
+
         if all_in_mills:
             return pieces
+
         removable = []
         for x, y in pieces:
             if not self.check_mill(x, y, opponent):
@@ -171,11 +182,15 @@ class Game:
 
     def remove_piece(self, x, y, player):
         opponent = 'B' if player == 'W' else 'W'
+        if not (x, y) in self.adjacent:
+            return False
         if self.board[y][x] != opponent:
             return False
+
         removable_pieces = self.get_opponent_pieces(player)
         if (x, y) not in removable_pieces:
             return False
+
         self.board[y][x] = '*'
         if opponent == 'W':
             self.white_lost += 1
@@ -204,7 +219,7 @@ class Game:
                         for nx, ny in self.adjacent.get((x, y), []):
                             if self.board[ny][nx] == '*':
                                 return True
-                    else:
+                    else:  # Flying rule
                         for ny_inner in range(7):
                             for nx_inner in range(7):
                                 if self.board[ny_inner][nx_inner] == '*' and (nx_inner, ny_inner) in self.adjacent:
@@ -220,12 +235,152 @@ class Game:
             self.black = state[3]
             self.white_lost = state[4]
             self.black_lost = state[5]
+            self.player = state[6]
             return True
         return False
 
 
+def print_board(game):
+    """
+    Prints the current state of the game board.
+    It combines the static visual representation with the dynamic piece positions.
+    """
+    visual_board = [list(line) for line in game.visual]
+
+    # Mapping from board coordinates (x, y) to visual coordinates (vx, vy)
+    # The visual board is a 13x13 grid, while the game board is a 7x7 grid.
+    # The relationship is generally (x,y) -> (x*2, y*2) for the visual representation.
+    for y in range(7):
+        for x in range(7):
+            if (x, y) in game.adjacent:
+                vx, vy = x * 2, y * 2
+                visual_board[vy][vx] = game.board[y][x]
+
+    for row in visual_board:
+        print("".join(row))
+
+
+def get_coordinates(prompt):
+    """
+    Helper function to get valid integer coordinates from user input.
+    Handles ValueError and ensures the correct number of inputs.
+    """
+    try:
+        coors = input(prompt).split()
+        if len(coors) != 2:
+            print("Invalid input. Please enter two numbers separated by a space.")
+            return None, None
+        x = int(coors[0])
+        y = int(coors[1])
+        return x, y
+    except ValueError:
+        print("Invalid input. Please enter integers for the coordinates.")
+        return None, None
+
+
+def handle_mill_removal(game):
+    """
+    Handles the mill removal logic, prompting the user until a valid
+    opponent's piece is removed.
+    """
+    while True:
+        rx, ry = get_coordinates("Enter coordinates of the opponent's piece to remove (x y): ")
+        if rx is not None and ry is not None:
+            if game.remove_piece(rx, ry, game.player):
+                print(f"Opponent's piece at ({rx}, {ry}) removed.")
+                break
+            else:
+                print("Invalid piece to remove. The piece might be in a mill, or the coordinates are invalid.")
+
+
 def main():
-    print("Welcome to the Mill Game Solver!")
+    """
+    Main function to run the Mills game loop.
+    """
+    game = Game()
+
+    while True:
+        if not game.active_game:
+            print("\n---")
+            print("No game is currently being played.")
+            print("1. Start a new game")
+            print("2. Quit")
+            choice = input("Enter your choice: ")
+
+            if choice == '1':
+                game.start()
+                print("New game started.")
+            elif choice == '2':
+                print("Goodbye!")
+                sys.exit()
+            else:
+                print("Invalid choice. Please try again.")
+        else:
+            print("\n---")
+            print_board(game)
+            print(f"It's player {game.player}'s turn.")
+            print(f"Player W has {game.white} pieces on the board.")
+            print(f"Player B has {game.black} pieces on the board.")
+            print(f"Total placed pieces: {game.placed}/18")
+            print("1. Take an action")
+            print("2. Undo a move")
+            print("3. Restart the game")
+            print("4. Quit")
+            choice = input("Enter your choice: ")
+
+            if choice == '1':
+                if game.placed < 18:
+                    # Placing phase
+                    print("Placing phase.")
+                    x, y = get_coordinates("Enter coordinates to place your piece (x y): ")
+                    if x is not None and y is not None:
+                        if game.place(x, y):
+                            print(f"Piece placed at ({x}, {y}).")
+                            if game.check_mill(x, y, game.player):
+                                print("You formed a mill! You can remove an opponent's piece.")
+                                handle_mill_removal(game)
+
+                            if game.check_win():
+                                print_board(game)
+                                print(f"Player {game.player} wins!")
+                                game.active_game = False
+                            else:
+                                game.switch()
+                        else:
+                            print("Invalid placement. Please try again.")
+                else:
+                    # Moving phase
+                    print("Moving phase.")
+                    x, y = get_coordinates("Enter source coordinates (x y): ")
+                    nx, ny = get_coordinates("Enter destination coordinates (x y): ")
+                    if x is not None and y is not None and nx is not None and ny is not None:
+                        if game.move(x, y, nx, ny):
+                            print(f"Piece moved from ({x}, {y}) to ({nx}, {ny}).")
+                            if game.check_mill(nx, ny, game.player):
+                                print("You formed a mill! You can remove an opponent's piece.")
+                                handle_mill_removal(game)
+
+                            if game.check_win():
+                                print_board(game)
+                                print(f"Player {game.player} wins!")
+                                game.active_game = False
+                            else:
+                                game.switch()
+                        else:
+                            print("Invalid move. Please try again.")
+            elif choice == '2':
+                if game.undo():
+                    print("Move undone.")
+                else:
+                    print("Cannot undo. No moves in history.")
+            elif choice == '3':
+                game.start()
+                print("Game restarted.")
+            elif choice == '4':
+                print("Goodbye!")
+                sys.exit()
+            else:
+                print("Invalid choice. Please try again.")
 
 
 if __name__ == "__main__":
