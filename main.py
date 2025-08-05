@@ -3,59 +3,6 @@ import copy
 import math
 
 
-def handle_computer_mill_removal(game, depth):
-    """
-    Decides which piece the computer should remove after forming a mill,
-    following a specific priority list.
-    """
-    opponent = 'B' if game.player == 'W' else 'W'
-    removable_pieces = game.get_opponent_pieces(game.player)
-    if not removable_pieces:
-        return
-
-    piece_to_remove = None
-
-    # Priority 1: Remove a piece from an opponent's unblocked 2-in-a-row
-    opponent_twos = game.get_unblocked_two_in_a_rows(opponent)
-    if opponent_twos:
-        for line in opponent_twos:
-            for piece in line:
-                if piece in removable_pieces:
-                    piece_to_remove = piece
-                    break
-            if piece_to_remove:
-                break
-
-    # Priority 2: Use minimax to determine the best piece to remove
-    if not piece_to_remove:
-        best_score = -math.inf if game.player == 'W' else math.inf
-
-        for rem_x, rem_y in removable_pieces:
-            removal_game = copy.deepcopy(game)
-            removal_game.remove_piece(rem_x, rem_y, game.player)
-            removal_game.switch()
-
-            is_maximizing = (removal_game.player == 'W')
-            score, _ = removal_game.minimax(depth - 1, -math.inf, math.inf, is_maximizing)
-
-            if game.player == 'W':
-                if score > best_score:
-                    best_score = score
-                    piece_to_remove = (rem_x, rem_y)
-            else:
-                if score < best_score:
-                    best_score = score
-                    piece_to_remove = (rem_x, rem_y)
-
-    # Fallback if no piece is chosen
-    if not piece_to_remove and removable_pieces:
-        piece_to_remove = removable_pieces[0]
-
-    if piece_to_remove:
-        print(f"Computer removes opponent's piece at {piece_to_remove}.")
-        game.remove_piece(piece_to_remove[0], piece_to_remove[1], game.player)
-
-
 class Game:
     visual = [
         "*─────*─────*",
@@ -319,7 +266,7 @@ class Game:
             max_eval = -math.inf
             for move in self.get_possible_moves():
                 temp_game = copy.deepcopy(self)
-                new_pos = self._apply_move(temp_game, move)
+                new_pos = self.apply_move(temp_game, move)
 
                 eval_after_move = 0
                 if temp_game.check_mill(new_pos[0], new_pos[1], temp_game.player):
@@ -348,7 +295,7 @@ class Game:
             min_eval = math.inf
             for move in self.get_possible_moves():
                 temp_game = copy.deepcopy(self)
-                new_pos = self._apply_move(temp_game, move)
+                new_pos = self.apply_move(temp_game, move)
 
                 eval_after_move = 0
                 if temp_game.check_mill(new_pos[0], new_pos[1], temp_game.player):
@@ -406,7 +353,7 @@ class Game:
         mill_moves = []
         for move in self.get_possible_moves():
             temp_game = copy.deepcopy(self)
-            new_pos = self._apply_move(temp_game, move)
+            new_pos = self.apply_move(temp_game, move)
             if temp_game.check_mill(new_pos[0], new_pos[1], self.player):
                 mill_moves.append(move)
 
@@ -417,7 +364,7 @@ class Game:
 
             for move in mill_moves:
                 game_after_move = copy.deepcopy(self)
-                self._apply_move(game_after_move, move)
+                self.apply_move(game_after_move, move)
 
                 # Simulate the best removal to score the position
                 temp_score, _ = game_after_move.minimax(depth - 1, -math.inf, math.inf, self.player == 'B')
@@ -432,9 +379,9 @@ class Game:
                         best_move = move
 
             if best_move:
-                new_pos = self._apply_move(self, best_move)
+                new_pos = self.apply_move(self, best_move)
                 print(f"Computer forms a mill at {new_pos}.")
-                handle_computer_mill_removal(self, depth)
+                self.handle_computer_mill_removal(self, depth)
                 return True
 
         # Priority 2: Block an opponent's unblocked 2-in-a-row.
@@ -455,7 +402,7 @@ class Game:
                     is_placing = self.placed < 18
                     dest = move if is_placing else move[1]
                     if dest == blocking_spot:
-                        new_pos = self._apply_move(self, move)
+                        new_pos = self.apply_move(self, move)
                         print(f"Computer blocks opponent's 2-in-a-row at {new_pos}.")
                         return True
 
@@ -464,11 +411,11 @@ class Game:
         _, best_move = self.minimax(depth, -math.inf, math.inf, self.player == 'W')
 
         if best_move:
-            new_pos = self._apply_move(self, best_move)
+            new_pos = self.apply_move(self, best_move)
             print(f"Computer moves to {new_pos}.")
             if self.check_mill(new_pos[0], new_pos[1], self.player):
                 print("Computer formed a mill!")
-                handle_computer_mill_removal(self, depth)
+                self.handle_computer_mill_removal(self, depth)
             return True
 
         return False
@@ -499,7 +446,59 @@ class Game:
                         "Invalid piece to remove. The piece might not exist, or it is in a mill when other pieces are "
                         "not.")
 
-    def _apply_move(self, game, move):
+    def handle_computer_mill_removal(self, game, depth):
+        """
+        Decides which piece the computer should remove after forming a mill,
+        following a specific priority list.
+        """
+        opponent = 'B' if game.player == 'W' else 'W'
+        removable_pieces = game.get_opponent_pieces(game.player)
+        if not removable_pieces:
+            return
+
+        piece_to_remove = None
+
+        # Priority 1: Remove a piece from an opponent's unblocked 2-in-a-row
+        opponent_twos = game.get_unblocked_two_in_a_rows(opponent)
+        if opponent_twos:
+            for line in opponent_twos:
+                for piece in line:
+                    if piece in removable_pieces:
+                        piece_to_remove = piece
+                        break
+                if piece_to_remove:
+                    break
+
+        # Priority 2: Use minimax to determine the best piece to remove
+        if not piece_to_remove:
+            best_score = -math.inf if game.player == 'W' else math.inf
+
+            for rem_x, rem_y in removable_pieces:
+                removal_game = copy.deepcopy(game)
+                removal_game.remove_piece(rem_x, rem_y, game.player)
+                removal_game.switch()
+
+                is_maximizing = (removal_game.player == 'W')
+                score, _ = removal_game.minimax(depth - 1, -math.inf, math.inf, is_maximizing)
+
+                if game.player == 'W':
+                    if score > best_score:
+                        best_score = score
+                        piece_to_remove = (rem_x, rem_y)
+                else:
+                    if score < best_score:
+                        best_score = score
+                        piece_to_remove = (rem_x, rem_y)
+
+        # Fallback if no piece is chosen
+        if not piece_to_remove and removable_pieces:
+            piece_to_remove = removable_pieces[0]
+
+        if piece_to_remove:
+            print(f"Computer removes opponent's piece at {piece_to_remove}.")
+            game.remove_piece(piece_to_remove[0], piece_to_remove[1], game.player)
+
+    def apply_move(self, game, move):
         """
         Internal helper to apply a move to a game instance.
         It correctly handles both placing and moving phases.
