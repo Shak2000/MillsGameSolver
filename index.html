@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mills Game Solver</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-4xl font-bold mb-4">Mills Game Solver</h1>
+
+        <!-- Game Controls -->
+        <div class="controls-container">
+            <!-- Renamed button for restarting the game -->
+            <button id="restartButton">Restart Game</button>
+            <button id="undoButton">Undo Last Move</button>
+            <div class="flex items-center space-x-2">
+                <input type="number" id="depthInput" value="3" min="1" max="5" class="w-20 px-2 py-1 rounded-md" aria-label="Minimax depth for computer move">
+                <button id="computerMoveButton">Computer Move</button>
+            </div>
+        </div>
+
+        <!-- Status and Message Display -->
+        <div class="status-panel">
+            <div id="playerTurn" class="player-turn-display"></div>
+            <div id="gameMessage" class="game-message"></div>
+        </div>
+
+        <!-- Game Board -->
+        <div class="board-container">
+            <!-- Board lines -->
+            <!-- Outer square -->
+            <div class="line horizontal-line" style="top: 5%; left: 5%; width: 90%;"></div>
+            <div class="line horizontal-line" style="top: 95%; left: 5%; width: 90%;"></div>
+            <div class="line vertical-line" style="top: 5%; left: 5%; height: 90%;"></div>
+            <div class="line vertical-line" style="top: 5%; left: 95%; height: 90%;"></div>
+
+            <!-- Middle square -->
+            <div class="line horizontal-line" style="top: 25%; left: 25%; width: 50%;"></div>
+            <div class="line horizontal-line" style="top: 75%; left: 25%; width: 50%;"></div>
+            <div class="line vertical-line" style="top: 25%; left: 25%; height: 50%;"></div>
+            <div class="line vertical-line" style="top: 25%; left: 75%; height: 50%;"></div>
+
+            <!-- Inner square -->
+            <div class="line horizontal-line" style="top: 40%; left: 40%; width: 20%;"></div>
+            <div class="line horizontal-line" style="top: 60%; left: 40%; width: 20%;"></div>
+            <div class="line vertical-line" style="top: 40%; left: 40%; height: 20%;"></div>
+            <div class="line vertical-line" style="top: 40%; left: 60%; height: 20%;"></div>
+
+            <!-- Connecting lines -->
+            <!-- Top center -->
+            <div class="line vertical-line" style="top: 5%; left: 50%; height: 20%;"></div>
+            <div class="line vertical-line" style="top: 25%; left: 50%; height: 15%;"></div>
+
+            <!-- Bottom center -->
+            <div class="line vertical-line" style="top: 75%; left: 50%; height: 20%;"></div>
+            <div class="line vertical-line" style="top: 60%; left: 50%; height: 15%;"></div>
+
+            <!-- Left center -->
+            <div class="line horizontal-line" style="top: 50%; left: 5%; width: 20%;"></div>
+            <div class="line horizontal-line" style="top: 50%; left: 25%; width: 15%;"></div>
+
+            <!-- Right center -->
+            <div class="line horizontal-line" style="top: 50%; left: 75%; width: 20%;"></div>
+            <div class="line horizontal-line" style="top: 50%; left: 60%; width: 15%;"></div>
+
+            <div class="board-points"></div>
+        </div>
+
+        <!-- Piece Count Display -->
+        <div class="piece-counts">
+            <div class="piece-count">
+                <div class="piece white-piece"></div>
+                <span>White Pieces: <span id="whitePieces">0</span> (<span id="whiteLost">0</span> lost)</span>
+            </div>
+            <div class="piece-count">
+                <div class="piece black-piece"></div>
+                <span>Black Pieces: <span id="blackPieces">0</span> (<span id="blackLost">0</span> lost)</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
