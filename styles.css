@@ -5,8 +5,8 @@
  */
 
 body {
-    background-color: #0b0c10;
-    color: #c5c6c7;
+    background-color: #f0f0f0;
+    color: #f0f0f0;
     font-family: 'Inter', sans-serif;
     display: flex;
     justify-content: center;
@@ -18,7 +18,7 @@ body {
 }
 
 .game-container {
-    background-color: #1f2833;
+    background-color: #e0e0e0;
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
@@ -32,7 +32,7 @@ body {
 
 h1 {
     font-size: 2.5rem;
-    color: #66fcf1;
+    color: #303030;
     margin-bottom: 20px;
 }
 
@@ -46,7 +46,7 @@ h1 {
 }
 
 button {
-    background-color: #45a29e;
+    background-color: #c0c0c0;
     color: #0b0c10;
     border: none;
     padding: 12px 20px;
@@ -73,8 +73,8 @@ button:active {
 }
 
 #depthInput {
-    background-color: #0b0c10;
-    color: #c5c6c7;
+    background-color: #c8c8c8;
+    color: #0b0c10;
     border: 1px solid #45a29e;
     padding: 8px;
     border-radius: 6px;
@@ -92,12 +92,13 @@ button:active {
     font-weight: bold;
     margin-bottom: 10px;
     min-height: 2rem;
+    color: #202020;
 }
 
 .game-message {
     min-height: 1.5rem;
     font-style: italic;
-    color: #c5c6c7;
+    color: #101010;
 }
 
 .board-container {
@@ -107,7 +108,7 @@ button:active {
     max-width: 500px;
     max-height: 500px;
     border-radius: 8px;
-    background-color: #1a1a2e;
+    background-color: #d0d0d0;
     box-shadow: 0 0 15px rgba(102, 252, 241, 0.3);
     margin: 0 auto;
 }
@@ -115,7 +116,7 @@ button:active {
 /* Board lines */
 .line {
     position: absolute;
-    background-color: #45a29e;
+    background-color: #7f7f7f;
     box-shadow: 0 0 5px rgba(102, 252, 241, 0.5);
     z-index: 1;
 }
@@ -164,17 +165,26 @@ button:active {
     height: 100%;
     border-radius: 50%;
     position: relative;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.white-piece {
+    background-color: #ffffff;
+    box-shadow: 0 0 5px #ffffff;
+}
+
+.black-piece {
+    background-color: #000000;
+    box-shadow: 0 0 5px #000000;
 }
 
 .piece.white {
-    background-color: #e0e0e0;
-    box-shadow: 0 0 8px #e0e0e0;
+    background-color: #ffffff;
+    box-shadow: 0 0 8px #ffffff;
 }
 
 .piece.black {
-    background-color: #333;
-    box-shadow: 0 0 8px #333;
+    background-color: #000000;
+    box-shadow: 0 0 8px #000000;
 }
 
 .piece-counts {
@@ -195,6 +205,10 @@ button:active {
 .piece-count .piece {
     width: 24px;
     height: 24px;
+}
+
+.piece-count-text {
+    color: #606060
 }
 
 /* Responsive design for smaller screens */
